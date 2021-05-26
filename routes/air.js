@@ -1,39 +1,60 @@
 var express = require('express');
 var router = express.Router();
-
-const convert = require('xml-js');
 const request = require('request');
 
-const RentURL = 'http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty?sidoName=%EB%8C%80%EA%B5%AC&pageNo=1&numOfRows=10&returnType=xml&serviceKey=g%2Fx5Ht7jOkI%2BkOenaaviQsW6YUd6EAiOuW1Z7310HY8h8qdIAx5HsbG7fhrja8uDypxUhz1ifQJrXd8qdUKWOg%3D%3D&ver=1.0'
+var parser = require('fast-xml-parser');
+var he = require('he')
 
-router.get('/', async function(req, res) {
-    console.log(req.query.data)
-    var url = `${RentURL}`
-    let data
+const airURL = 'http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty?sidoName=%EB%8C%80%EA%B5%AC&pageNo=1&numOfRows=1&returnType=xml&serviceKey=g%2Fx5Ht7jOkI%2BkOenaaviQsW6YUd6EAiOuW1Z7310HY8h8qdIAx5HsbG7fhrja8uDypxUhz1ifQJrXd8qdUKWOg%3D%3D&ver=1.3'
 
-    request.get(url, (err, res, body)=>{
-            if(err){
-                console.log(`err=>${err}`)
-            }else{
-                if(res.statusCode == 200){
-                    var result = body
-                    console.log(`body data => ${result}`)
-                    var xmlToJson = convert.xml2json(result,{compact:true, spaces:4});
-                    
-                    console.log(xmlToJson)
-                    data = xmlToJson
-                    //res.send(`xml to json => ${xmlToJson}`);
-                    
-                }else{
-                    console.log(res.statusCode)
-                    console.log(res.statusMessage)
-                }
-                
-            }
-        }    
-    )
-   
-   res.render('index',{title:'air test',body:data})
+var url = 'http://openapi.airkorea.or.kr/openapi/services/rest/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty';
+var queryParams = '?' + encodeURIComponent('sidoName') + '=' + encodeURIComponent('대구'); /* Service Key*/
+queryParams += '&' + encodeURIComponent('pageNo') + '=' + encodeURIComponent('1'); /* */
+queryParams += '&' + encodeURIComponent('numOfRows') + '=' + encodeURIComponent('1'); /* */
+queryParams += '&' + encodeURIComponent('ServiceKey') + '=' + encodeURIComponent('g%2Fx5Ht7jOkI%2BkOenaaviQsW6YUd6EAiOuW1Z7310HY8h8qdIAx5HsbG7fhrja8uDypxUhz1ifQJrXd8qdUKWOg%3D%3D'); /* */
+queryParams += '&' + encodeURIComponent('ver') + '=' + encodeURIComponent('1.3'); /* */
+
+var options = {
+    attributeNamePrefix : "@_",
+    attrNodeName: "attr", //default is 'false'
+    textNodeName : "#text",
+    ignoreAttributes : true,
+    ignoreNameSpace : false,
+    allowBooleanAttributes : false,
+    parseNodeValue : true,
+    parseAttributeValue : false,
+    trimValues: true,
+    cdataTagName: "__cdata", //default is 'false'
+    cdataPositionChar: "\\c",
+    parseTrueNumberOnly: false,
+    arrayMode: false, //"strict"
+    attrValueProcessor: (val, attrName) => he.decode(val, {isAttributeValue: true}),//default is a=>a
+    tagValueProcessor : (val, tagName) => he.decode(val), //default is a=>a
+    stopNodes: ["parse-me-as-string"]
+};
+
+router.get('/', async function (req, res) {
+    
+    var state
+    request({
+        url: airURL,
+        method: 'GET'
+    }, function (err, res, body) {
+        
+        var tObj = parser.getTraversalObj(body,options);
+        var jsonObj = parser.convertToJson(tObj,options);
+        console.log(jsonObj.response.body.items.item.pm10Value)
+        state = {
+            '미세먼지':jsonObj.response.body.items.item.pm10Value,
+            '초미세먼지':jsonObj.response.body.items.item.pm25Value,
+            '관측날짜':jsonObj.response.body.items.item.dataTime
+        }
+        console.log(state)
+        
+    });
+    res.send(state)
+
 });
+
 
 module.exports = router;

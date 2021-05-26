@@ -15,13 +15,11 @@
     "express": "~4.16.1",
     "fast-xml-parser": "^3.19.0",
     "firebase": "^8.3.3",
+    "he": "^1.2.0",
     "http-errors": "~1.6.3",
     "jade": "~1.11.0",
     "morgan": "~1.9.1",
     "nodemon": "^2.0.7",
-    "request": "^2.88.2",
-    "xml-js": "^1.6.11",
-    "xml2js": "^0.4.23",
-    "xml2json": "^0.12.0"
+    "request": "^2.88.2"
   }
 }
