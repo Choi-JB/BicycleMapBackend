@@ -39,7 +39,7 @@ router.get('/', async function (req, res) {
     request({
         url: airURL,
         method: 'GET'
-    }, function (err, res, body) {
+    }, function (err, response, body) {
         
         var tObj = parser.getTraversalObj(body,options);
         var jsonObj = parser.convertToJson(tObj,options);
@@ -50,9 +50,9 @@ router.get('/', async function (req, res) {
             '관측날짜':jsonObj.response.body.items.item.dataTime
         }
         console.log(state)
-        
+        res.send(state)
     });
-    res.send(state)
+    
 
 });
 
